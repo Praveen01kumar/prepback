@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Account</title>
+</head>
+
+<body>
+    <style>
+        body {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        .reset_page {
+            display: flex;
+            justify-content: center;
+            height: 100vh;
+            background: #d0fff9;
+            align-items: center;
+        }
+
+        .form_box {
+            height: fit-content;
+            width: 24%;
+            background: #000000;
+            opacity: 0.8;
+            padding: 2%;
+            border-radius: 20px;
+            color: #d0fff9;
+            box-shadow: 0px 10px 15px -3px #000000;
+        }
+
+        .wrapper {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .wrapper .arrow {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: hsl(40deg 100% 50.3% / 87%);
+            transition: 0.2s ease-in-out;
+        }
+
+        .wrapper .arrow .line {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 35px;
+            height: 8px;
+            border-radius: 2px;
+            background: #fff;
+            transform-origin: center;
+            transform: translate(-50%, -50%) rotate(45deg);
+
+            &:nth-child(2) {
+                transform: translate(-50%, -50%) rotate(-45deg);
+            }
+        }
+
+        .wrapper1 {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .wrapper1 .arrow {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: hsla(134, 100%, 50%, 0.87);
+            transition: 0.2s ease-in-out;
+        }
+
+        .wrapper1 .arrow .line {
+            position: absolute;
+            top: 47%;
+            left: 50%;
+            width: 11px;
+            height: 30px;
+            border-bottom: 8px solid #fff;
+            border-right: 8px solid #fff;
+            background: transparent;
+            transform-origin: center;
+            transform: translate(-50%, -50%) rotate(45deg);
+
+            &:nth-child(2) {
+                transform: translate(-50%, -50%) rotate(-45deg);
+            }
+        }
+
+        #verify_fail {
+            display: none;
+        }
+
+        #verify_success {
+            display: none;
+        }
+    </style>
+    <div class="reset_page">
+        <div class="form_box">
+            <div id="verify_fail">
+                <div class="wrapper">
+                    <div class="arrow">
+                        <div class="line"></div>
+                        <div class="line"></div>
+                    </div>
+                </div>
+                <h1 style="text-align: center; margin-top: 24px;font-size: 22px;">Can't Validate Your Account!</h1>
+            </div>
+
+            <div id="verify_success">
+                <div class="wrapper1">
+                    <div class="arrow">
+                        <div class="line"></div>
+                    </div>
+                </div>
+                <h1 style="text-align: center; margin-top: 24px;font-size: 22px;">Your Account is Verified!</h1>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('pageshow', fetchApi());
+        const verify_success = document.getElementById('verify_success');
+        const verify_fail = document.getElementById('verify_fail');
+        async function fetchApi() {
+            const token_not_found = 'Token not found in the URL parameters. Please try again!';
+            const req_url = 'http://localhost:3000/auth/verify-me';
+            const method = 'POST';
+            const headers = { 'Content-Type': 'application/json', };
+            const paramToken = new URLSearchParams(window.location.search).get('token');
+            const formData = { token: paramToken };
+            if (!paramToken) { alert(token_not_found); return; }
+            try {
+                const response = await fetch(req_url, { method: method, headers: headers, body: JSON.stringify(formData) });
+                const responseData = await response.json();
+                if (response?.ok) { verify_success.style.display = 'block'; return; };
+                if (!response.ok) { verify_fail.style.display = 'block'; return; };
+            } catch (error) { alert(error.message); return; }
+        }
+    </script>
+</body>
+
+</html>
