@@ -5,7 +5,7 @@ import { Request, Response, NextFunction } from 'express';
 @Injectable()
 export class AgentMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
-      const allowedFrontend = ['http://localhost:4200'];
+      const allowedFrontend = ['http://localhost:4200', 'https://prepangular1.web.app'];
       const userAgent = req?.headers?.origin;
     if (userAgent && allowedFrontend.some(browser => userAgent.includes(browser))) {
       next();

@@ -7,7 +7,7 @@ import { Request as ExpressRequest } from 'express';
 import { LocationGuard } from 'src/guards/Location/location.guard';
 import { AllowedCountries } from 'src/guards/Location/countries';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { MulterConfig, extractPublicIdFromCloudinaryUrl, updateCloudinaryImage, uploadToCloudinary } from 'src/services/shared.service';
+import { MulterConfig, extractPublicIdFromCloudinaryUrl, updateCloudinaryImage } from 'src/services/shared.service';
 import { UsersService } from '../users/users.service';
 import * as fs from 'fs';
 import { RecordService } from '../recorded/record.service';
@@ -33,31 +33,46 @@ export class AuthController {
         return await this.authService.logout(req?.body, req?.ip);
     }
 
-    @Post('signup')
-    @UseInterceptors(FileInterceptor('profile_img', MulterConfig))
-    async signUp(@Body() user: UserDto, @UploadedFile() profile_img: Express.Multer.File) {
+    // @Post('signup')
+    // @UseInterceptors(FileInterceptor('profile_img', MulterConfig))
+    // async signUp(@Body() user: UserDto, @UploadedFile() profile_img: Express.Multer.File) {
 
+    //     const userExistByEmail = await this.userService.findOneByEmail(user.email);
+    //     if (userExistByEmail) {
+    //         const filePath = profile_img.path;
+    //         fs.unlinkSync(filePath);
+    //         throw new ForbiddenException('This email already exist');
+    //     }
+    //     const userExistByUser = await this.userService.findOneByUserName(user.username);
+    //     if (userExistByUser) {
+    //         const filePath = profile_img.path;
+    //         fs.unlinkSync(filePath);
+    //         throw new ForbiddenException('This username already exist');
+    //     }
+    //     const imagePath = profile_img ? profile_img?.filename : null;
+    //     const cloudinaryResponse = await uploadToCloudinary(imagePath);
+
+    //     if (profile_img.path) {
+    //         const filePath = profile_img.path; // delete file from profileimg forlder
+    //         fs.unlinkSync(filePath);
+    //     }
+
+    //     return await this.authService.create({ ...user, profile_img: cloudinaryResponse.secure_url });
+    // }
+
+    @Post('signup') // signup without profile image
+    async signUp(@Body() user: UserDto) {
+        console.log(user);
+        
         const userExistByEmail = await this.userService.findOneByEmail(user.email);
         if (userExistByEmail) {
-            const filePath = profile_img.path;
-            fs.unlinkSync(filePath);
             throw new ForbiddenException('This email already exist');
         }
         const userExistByUser = await this.userService.findOneByUserName(user.username);
         if (userExistByUser) {
-            const filePath = profile_img.path;
-            fs.unlinkSync(filePath);
             throw new ForbiddenException('This username already exist');
         }
-        const imagePath = profile_img ? profile_img?.filename : null;
-        const cloudinaryResponse = await uploadToCloudinary(imagePath);
-
-        if (profile_img.path) {
-            const filePath = profile_img.path; // delete file from profileimg forlder
-            fs.unlinkSync(filePath);
-        }
-
-        return await this.authService.create({ ...user, profile_img: cloudinaryResponse.secure_url });
+        return await this.authService.create({ ...user });
     }
 
     @UseGuards(AuthGuard('jwt'))
