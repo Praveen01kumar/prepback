@@ -128,9 +128,10 @@
 
 
 /* eslint-disable prettier/prettier */
-import { Table, Column, Model, DataType, PrimaryKey, Default } from 'sequelize-typescript';
+import { Table, Column, Model, DataType, PrimaryKey, Default, HasOne } from 'sequelize-typescript';
 import { v4 as uuidv4 } from 'uuid';
 import { Gender, Role } from 'src/enum/users.enum';
+import { Record } from '../recorded/record.table';
 
 @Table
 export class User extends Model<User> {
@@ -252,5 +253,8 @@ export class User extends Model<User> {
         allowNull: false,
     })
     ip: string;
+
+    @HasOne(() => Record)
+    record: Record;
 
 }

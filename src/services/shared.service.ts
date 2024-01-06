@@ -12,6 +12,17 @@ export const MulterConfig = {
       return callback(null, `${randomName}${extname(file.originalname)}`);
     },
   }),
+  limits: { fileSize: 2 * 1024 * 1024 },
+  fileFilter: (req, file, callback) => {
+    if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
+      return callback(new Error('Only JPG, JPEG, and PNG files are allowed.'));
+    }
+    // const fileSize = req.headers['content-length'];
+    // if (fileSize && parseInt(fileSize, 10) > 2 * 1024 * 1024) {
+    //   return callback(new Error('File size exceeds the allowed limit (2MB).'));
+    // }
+    callback(null, true);
+  },
 };
 
 cloudinary.config({

@@ -4,6 +4,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import { User } from './user.table';
 import { USER_REPOSITORY } from 'src/constants';
 import { UserDto } from './user.dto';
+import { Record } from '../recorded/record.table';
 
 
 @Injectable()
@@ -16,15 +17,24 @@ export class UsersService {
     }
 
     async findOneByEmail(email: string): Promise<User> {
-        return await this.userRepository.findOne<User>({ where: { email } });
+        return await this.userRepository.findOne<User>({
+            where: { email },
+            include: [{ model: Record, as: 'record', attributes: { exclude: ['resetpasstime', 'loginotp', 'otpexTime', 'createdAt', 'updatedAt'] } }],
+        });
     }
 
     async findOneByUserName(username: string): Promise<User> {
-        return await this.userRepository.findOne<User>({ where: { username } });
+        return await this.userRepository.findOne<User>({
+            where: { username },
+            include: [{ model: Record, as: 'record', attributes: { exclude: ['resetpasstime', 'loginotp', 'otpexTime', 'createdAt', 'updatedAt'] } }],
+        });
     }
 
     async findOneById(id: string | number): Promise<User> {
-        return await this.userRepository.findOne<User>({ where: { id } });
+        return await this.userRepository.findOne<User>({
+            where: { id },
+            include: [{ model: Record, as: 'record', attributes: { exclude: ['resetpasstime', 'loginotp', 'otpexTime', 'createdAt', 'updatedAt'] } }],
+        });
     }
 
     async delete(id: string | number): Promise<string | number> {
@@ -47,7 +57,7 @@ export class UsersService {
     }
 
     async updateUserData(id: string | number, userData: Partial<User>): Promise<any> {
-      return await this.userRepository.update(
+        return await this.userRepository.update(
             { ...userData },
             { where: { id } }
         );

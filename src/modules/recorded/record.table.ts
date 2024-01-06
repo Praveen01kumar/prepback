@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { Table, Column, Model, DataType, ForeignKey, BelongsTo, PrimaryKey, Default } from 'sequelize-typescript';
+import { Table, Column, Model, DataType, ForeignKey, PrimaryKey, Default } from 'sequelize-typescript';
 import { User } from '../users/user.table';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -33,7 +33,6 @@ export class Record extends Model<Record> {
     })
     otpexTime: string;
 
-
     @Column({
         type: DataType.BOOLEAN,
         allowNull: true,
@@ -46,7 +45,5 @@ export class Record extends Model<Record> {
         allowNull: false,
     })
     userId: string;
-
-    @BelongsTo(() => User)
-    user: User;
+ 
 }

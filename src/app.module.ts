@@ -9,14 +9,13 @@ import { AuthModule } from './modules/auth/auth.module';
 import { PostsModule } from './modules/posts/posts.module';
 import { UsersModule } from './modules/users/users.module';
 import { SequelizeConfig } from './database/database.providers';
-import { BrowserMiddleware } from './Middlewares/browser.middleware';
+import { AgentMiddleware } from './Middlewares/agent.middleware';
 import { HostMiddleware } from './Middlewares/host.middleware';
 import { ProtocolMiddleware } from './Middlewares/protocol.middleware';
 import { TokenMiddleware } from './Middlewares/token.middleware';
 import { MailService } from './services/email.service';
 import { MailModule } from './modules/mail/mail.module';
 import { RecordModule } from './modules/recorded/record.module';
-import { AgentMiddleware } from './Middlewares/agent.middleware';
 
 @Module({
   imports: [
@@ -39,9 +38,8 @@ export class AppModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(
       HostMiddleware,
-      BrowserMiddleware,
+      AgentMiddleware,
       ProtocolMiddleware,
-      AgentMiddleware
     ).forRoutes('*')
     consumer.apply(TokenMiddleware).exclude(
       { path: 'auth/login', method: RequestMethod.POST },

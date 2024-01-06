@@ -56,7 +56,7 @@ export class AuthService {
         }
         const token = await this.generateToken(uservalue?.user);
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { role, ip, ...user } = uservalue?.user;
+        const { ip, ...user } = uservalue?.user;
 
         const recData: Partial<RecordDto> = { loginotp: null, otpexTime: null };
         await this.recordService.updateRecord(recData, uservalue?.user?.id);
@@ -66,13 +66,13 @@ export class AuthService {
     }
 
     public async logout(uservalue, ip: string) {
-        const userExist = await this.userService.findOneByEmail(uservalue?.username);
+        const userExist = await this.userService.findOneByEmail(uservalue?.email);
         if (!userExist) {
             throw new ForbiddenException('User not Found!');
         }
         const updateIp = await this.userService.updateIP(userExist['dataValues']?.id, ip);
         if (!updateIp) { throw new NotFoundException(`User not found!`) }
-        return { message: "User logged out successfully please login now!" };
+        return { message: "User logged out successfully please login now!", status: true };
     }
 
     public async create(user) {
@@ -82,11 +82,12 @@ export class AuthService {
         const newUser = await this.userService.create({ ...withoutrole, password: pass });
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { password, ip, ...result } = newUser['dataValues'];
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const token = await this.generateToken(result);
         const recData: Partial<RecordDto> = {};
-        await this.setVerifymail(newUser?.email);
+        await this.sendVerifymail(newUser?.email);
         await this.recordService.create(recData, newUser?.id);
-        return { user: result, token };
+        return { user: result, status: true, message: "User Registered Successfully!, please check email to verify your account" };
     }
 
     private async generateToken(user) {
@@ -208,15 +209,19 @@ export class AuthService {
         const userToken = request.headers['authorization'];
         const decoded: any = jwt.decode(userToken.replace('Bearer ', ''), { complete: true });
         if (id === decoded?.payload?.id) {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const { password, role, ip, email, username, ...userReqData } = requestBodyData;
-            const updated_to_user = this.userService.findOneById(id);
+            const updated_to_user = await this.userService.findOneById(id);
             if (!updated_to_user) { throw new NotFoundException(`User not found`) };
-            const updateeUser = await this.userService.updateUserData(id, userReqData);
-            if (!updateeUser) {
-                throw new NotFoundException(`User not found`);
+            if (requestBodyData) {
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                const { password, role, ip, email, username, ...userReqData } = requestBodyData;
+                const updateeUser = await this.userService.updateUserData(id, userReqData);
+                if (!updateeUser) { throw new NotFoundException(`User not found`); }
             }
-            return { message: `User updated successfully`, status: true, statusCode: 200 };
+            const updated_user = await this.userService.findOneById(id);
+            if (!updated_user) { throw new NotFoundException(`User not found`) };
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { ip, password, ...userData } = updated_user['dataValues'];
+            return { message: `User updated successfully`, status: true, statusCode: 200, user: userData };
         } else {
             throw new HttpException('Access denied', HttpStatus.FORBIDDEN);
         }
@@ -341,16 +346,15 @@ export class AuthService {
             const token = jwt.sign({ data: username_user }, process.env.JWTKEY, { expiresIn: '5m' });
             await this.mailService.sendUserConfirmation(username_user, token);
         }
-        return { status: true, message: "Link send successfully!" };
+        return { status: true, message: "Password reset link send successfully!" };
     }
 
-    public async setVerifymail(email: string) {
+    public async sendVerifymail(email: string) {
         if (email) {
             const email_user = await this.userService.findOneByEmail(email);
             if (!email_user) { throw new NotFoundException(`Email not found`) };
             const token = jwt.sign({ data: email_user }, process.env.JWTKEY, { expiresIn: '10m' });
             await this.mailService.accountVerification(email_user, token);
-
         }
         return { status: true, message: "Account Verification Link send successfully!" };
     }
@@ -372,7 +376,7 @@ export class AuthService {
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         if (email) {
             const email_user = await this.userService.findOneByEmail(email);
-            if (!email_user) { throw new NotFoundException(`Email not found`) };
+            if (!email_user) { throw new NotFoundException(`User not found!`) };
             const recData: Partial<RecordDto> = { loginotp: otp, otpexTime: new Date().toISOString() };
             await this.mailService.sendLoginOTP(email_user, otp);
             await this.recordService.updateRecord(recData, email_user.id);

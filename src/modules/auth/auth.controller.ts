@@ -62,8 +62,6 @@ export class AuthController {
 
     @Post('signup') // signup without profile image
     async signUp(@Body() user: UserDto) {
-        console.log(user);
-        
         const userExistByEmail = await this.userService.findOneByEmail(user.email);
         if (userExistByEmail) {
             throw new ForbiddenException('This email already exist');
@@ -92,19 +90,21 @@ export class AuthController {
                 fs.unlinkSync(filePath);
                 throw new NotFoundException('User not found');
             }
-            if (user.profile_img) {
-                const oldImagePath = `../../../profileImg/${user.profile_img}`;
-                fs.unlinkSync(oldImagePath);
-            }
+            // if (user.profile_img) {
+            //     const oldImagePath = `../../../profileImg/${user.profile_img}`;
+            //     fs.unlinkSync(oldImagePath);
+            // }
             const imagePath = profile_img ? profile_img?.filename : null;
             const getPublicId = await extractPublicIdFromCloudinaryUrl(user?.profile_img);
             const cloudinaryResponse = await updateCloudinaryImage(imagePath, getPublicId);
             await this.userService.updateProfileImg(userId, cloudinaryResponse.secure_url);
             if (profile_img.path) {
-                const filePath = profile_img.path; // delete file from profileimg forlder
+                const filePath = profile_img.path; // delete file from profileimg forlder 
                 fs.unlinkSync(filePath);
             }
-            return { success: true, message: 'Profile image updated successfully' };
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { ip, password, ...userData } = user['dataValues'];
+            return { status: true, message: 'Profile image updated successfully', user: userData };
         } catch (error) {
             throw error;
         }
@@ -233,11 +233,11 @@ export class AuthController {
         }
     }
 
-    @Post('verify-account-mail') // verify account
+    @Post('verify-account-mail') // sending mail to account verification using this route by user
     async verifyMail(@Req() request: ExpressRequest) {
         const email = request?.body?.email;
         try {
-            return await this.authService.setVerifymail(email);
+            return await this.authService.sendVerifymail(email);
         } catch (error) {
             if (error instanceof NotFoundException) {
                 throw new NotFoundException(error.message);
@@ -264,7 +264,7 @@ export class AuthController {
         }
     }
 
-    @Get('account-verification')
+    @Get('account-verification') // render verify account page on this route
     async accountverifypage(@Query('token') token: string) {
         try {
             const isValidToken = await this.authService.verifyToken(token);
@@ -338,7 +338,7 @@ export class AuthController {
         }
     }
 
-    @Post('verify-me')
+    @Post('verify-me')// account will verified by this route
     async verifyMe(@Req() request: ExpressRequest) {
         const token = request?.body?.token;
         try {
