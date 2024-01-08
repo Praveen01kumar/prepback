@@ -1,6 +1,7 @@
 /* eslint-disable prettier/prettier */
 import { MailerService } from '@nestjs-modules/mailer';
 import { Injectable } from '@nestjs/common';
+import { REQ_URL } from 'src/constants';
 import { User } from 'src/modules/users/user.table';
 
 @Injectable()
@@ -8,7 +9,7 @@ export class MailService {
   constructor(private mailerService: MailerService) { }
 
   async sendUserConfirmation(user: User, token: string) {
-    const url = `http://localhost:3000/auth/reset-password?token=${token}`;
+    const req_url = `${REQ_URL}auth/reset-password?token=${token}`;
     await this.mailerService.sendMail({
       to: user?.email,
       //from: process.env.MAILED_BY,
@@ -16,7 +17,7 @@ export class MailService {
       subject: 'Reset Your Prep Account Password: Action Required!',
       context: {
         name: user?.email,
-        url,
+        req_url,
       },
       html: `<!DOCTYPE html>
       <html lang="en">               
@@ -100,7 +101,7 @@ export class MailService {
             <p class="link_he">You can reset your password by clicking the link below:</p>
         </div>
         <div class="link_btn">
-            <button><a href="${url}" target="_blank">Reset your password</a></button>
+            <button><a href="${req_url}" target="_blank">Reset your password</a></button>
         </div>
         <div style="text-align: center;">
             <p class="link_is_valid">link is valid for 10 minutes only!</p>
@@ -241,7 +242,7 @@ export class MailService {
   }
 
   async accountVerification(user: User, token: string) {
-    const url = `http://localhost:3000/auth/account-verification?token=${token}`;
+    const url = `https://clear-handkerchief-bat.cyclic.app/auth/account-verification?token=${token}`;
     await this.mailerService.sendMail({
       to: user?.email,
       //from: process.env.MAILED_BY,

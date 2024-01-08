@@ -135,7 +135,7 @@
         const verify_fail = document.getElementById('verify_fail');
         async function fetchApi() {
             const token_not_found = 'Token not found in the URL parameters. Please try again!';
-            const req_url = 'http://localhost:3000/auth/verify-me';
+            const req_url = `${REQ_URL}auth/verify-me`;
             const method = 'POST';
             const headers = { 'Content-Type': 'application/json', };
             const paramToken = new URLSearchParams(window.location.search).get('token');
