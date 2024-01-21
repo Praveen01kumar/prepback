@@ -7,6 +7,8 @@ import { Post } from 'src/modules/posts/post.table';
 import * as SequelizeType from 'sequelize';
 import { dialectConfig } from 'src/interface/dbconfig.interface';
 import { Record } from 'src/modules/recorded/record.table';
+import { PostCtg } from 'src/modules/postcategory/postctg.table';
+import { Comment } from 'src/modules/postcomment/postcmt.table'
 
 
 export const databaseProviders = [{
@@ -27,16 +29,11 @@ export const databaseProviders = [{
                 config = databaseConfig.development;
         }
         const sequelize = new Sequelize(config);
-        sequelize.addModels([User, Post, Record]);
-        await sequelize.sync({
-            // force: true, // Drops existing tables and recreates them
-            // logging: console.log, // Logs SQL queries
-            alter: false // Alters the existing table to match the model
-        }).then(() => {
+        sequelize.addModels([User, Post, Record, PostCtg, Comment]);
+        await sequelize.sync({ force: false, logging: false, alter: false }).then(async () => {
+            // await Comment.sync({ alter: true, force: false });
             console.log('Database and tables have been created!');
-        }).catch((err) => {
-            console.error('Error syncing the database:', err);
-        });
+        }).catch((err) => { console.error('Error syncing the database:', err); });
     },
 }];
 

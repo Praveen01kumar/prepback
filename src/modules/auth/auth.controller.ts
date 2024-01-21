@@ -7,7 +7,7 @@ import { Request as ExpressRequest } from 'express';
 import { LocationGuard } from 'src/guards/Location/location.guard';
 import { AllowedCountries } from 'src/guards/Location/countries';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { MulterConfig, extractPublicIdFromCloudinaryUrl, updateCloudinaryImage } from 'src/services/shared.service';
+import { MulterConfigForProfile, extractPublicIdFromCloudinaryUrl, updateCloudinaryImage } from 'src/services/shared.service';
 import { UsersService } from '../users/users.service';
 import * as fs from 'fs';
 import { RecordService } from '../recorded/record.service';
@@ -62,20 +62,25 @@ export class AuthController {
 
     @Post('signup') // signup without profile image
     async signUp(@Body() user: UserDto) {
-        const userExistByEmail = await this.userService.findOneByEmail(user.email);
-        if (userExistByEmail) {
-            throw new ForbiddenException('This email already exist');
+        try {
+            const userExistByEmail = await this.userService.findOneByEmail(user.email);
+            if (userExistByEmail) {
+                throw new ForbiddenException('This email already exist');
+            }
+            const userExistByUser = await this.userService.findOneByUserName(user.username);
+            if (userExistByUser) {
+                throw new ForbiddenException('This username already exist');
+            }
+            return await this.authService.create({ ...user });
+        } catch (er) {
+            return { message: er?.message, status: false }
         }
-        const userExistByUser = await this.userService.findOneByUserName(user.username);
-        if (userExistByUser) {
-            throw new ForbiddenException('This username already exist');
-        }
-        return await this.authService.create({ ...user });
+
     }
 
     @UseGuards(AuthGuard('jwt'))
     @Patch('update_pf_img') // profile image update 
-    @UseInterceptors(FileInterceptor('profile_img', MulterConfig))
+    @UseInterceptors(FileInterceptor('profile_img', MulterConfigForProfile))
     async updateProfileImg(@UploadedFile() profile_img: Express.Multer.File, @Request() req) {
         try {
             const userId = req?.user?.id;
@@ -105,8 +110,8 @@ export class AuthController {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const { ip, password, ...userData } = user['dataValues'];
             return { status: true, message: 'Profile image updated successfully', user: userData };
-        } catch (error) {
-            throw error;
+        } catch (er) {
+            return { message: er?.message, status: false }
         }
     }
 
@@ -119,7 +124,7 @@ export class AuthController {
             if (error instanceof NotFoundException) {
                 throw new NotFoundException(error.message);
             } else {
-                throw error;
+                return { message: error?.message, status: false };
             }
         }
     }
@@ -133,7 +138,7 @@ export class AuthController {
             if (error instanceof NotFoundException) {
                 throw new NotFoundException(error.message);
             } else {
-                throw error;
+                return { message: error?.message, status: false };
             }
         }
     }
@@ -147,7 +152,7 @@ export class AuthController {
             if (error instanceof NotFoundException) {
                 throw new NotFoundException(error.message);
             } else {
-                throw error;
+                return { message: error?.message, status: false };
             }
         }
     }
@@ -161,7 +166,7 @@ export class AuthController {
             if (error instanceof NotFoundException) {
                 throw new NotFoundException(error.message);
             } else {
-                throw error;
+                return { message: error?.message, status: false };
             }
         }
     }
@@ -175,7 +180,7 @@ export class AuthController {
             if (error instanceof NotFoundException) {
                 throw new NotFoundException(error.message);
             } else {
-                throw error;
+                return { message: error?.message, status: false };
             }
         }
     }
@@ -189,7 +194,7 @@ export class AuthController {
             if (error instanceof NotFoundException) {
                 throw new NotFoundException(error.message);
             } else {
-                throw error;
+                return { message: error?.message, status: false };
             }
         }
     }
@@ -202,7 +207,7 @@ export class AuthController {
             if (error instanceof NotFoundException) {
                 throw new NotFoundException(error.message);
             } else {
-                throw error;
+                return { message: error?.message, status: false };
             }
         }
     }
@@ -215,7 +220,7 @@ export class AuthController {
             if (error instanceof NotFoundException) {
                 throw new NotFoundException(error.message);
             } else {
-                throw error;
+                return { message: error?.message, status: false };
             }
         }
     }
@@ -228,7 +233,7 @@ export class AuthController {
             if (error instanceof NotFoundException) {
                 throw new NotFoundException(error.message);
             } else {
-                throw error;
+                return { message: error?.message, status: false };
             }
         }
     }
@@ -242,7 +247,7 @@ export class AuthController {
             if (error instanceof NotFoundException) {
                 throw new NotFoundException(error.message);
             } else {
-                throw error;
+                return { message: error?.message, status: false };
             }
         }
     }
@@ -259,7 +264,7 @@ export class AuthController {
             if (error instanceof ForbiddenException) {
                 throw new ForbiddenException(error.message);
             } else {
-                throw error;
+                return { message: error?.message, status: false };
             }
         }
     }
@@ -281,7 +286,7 @@ export class AuthController {
                 // throw new ForbiddenException(error.message);
             } else {
                 return await this.authService.pageNoteFound();
-                // throw error;
+                // return { message: error?.message, status: false };
             }
         }
     }
@@ -320,7 +325,7 @@ export class AuthController {
             if (error instanceof ForbiddenException) {
                 throw new ForbiddenException(error.message);
             } else {
-                throw error;
+                return { message: error?.message, status: false };
             }
         }
     }
@@ -333,7 +338,7 @@ export class AuthController {
             if (error instanceof NotFoundException) {
                 throw new NotFoundException(error.message);
             } else {
-                throw error;
+                return { message: error?.message, status: false };
             }
         }
     }
@@ -363,7 +368,20 @@ export class AuthController {
             if (error instanceof ForbiddenException) {
                 throw new ForbiddenException(error.message);
             } else {
-                throw error;
+                return { message: error?.message, status: false };
+            }
+        }
+    }
+
+    @Post('connect-mail') // connect-mail
+    async connectMail(@Req() request: ExpressRequest) {
+        try {
+            return await this.authService.sendConnectmail(request?.body);
+        } catch (error) {
+            if (error instanceof NotFoundException) {
+                throw new NotFoundException(error.message);
+            } else {
+                return { message: error?.message, status: false };
             }
         }
     }

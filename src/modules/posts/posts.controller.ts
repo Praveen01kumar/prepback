@@ -8,45 +8,44 @@ import { RolesGuard } from 'src/guards/role/roles.guard';
 import { Roles } from 'src/guards/role/roles';
 import { Role } from 'src/enum/users.enum';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
-
+import { MulterConfigForPost, uploadPostToCloudinary } from 'src/services/shared.service';
+import * as fs from 'fs';
 @Controller('posts')
 export class PostsController {
     constructor(private readonly postService: PostsService) { }
 
     @Get()
     async findAll() {
-        return await this.postService.findAll();
+        const post = await this.postService.findAll();
+        return { data: post, status: true, messsage: "List Found Successfully!" }
     }
 
     @Get(':id')
-    @UseGuards(AuthGuard('jwt'))
-    async findOne(@Param('id') id: number): Promise<PostEntity> {
-        const post = await this.postService.findOne(id);
+    async findOne(@Param('id') id: number): Promise<any> {
+        const post: PostEntity = await this.postService.findOne(id);
         if (!post) {
             throw new NotFoundException('This Post doesn\'t exist');
         }
-        return post;
+        return { data: post, status: true, messsage: "Post Found Successfully!" }
     }
 
     @Post('create')
     @Roles(Role.ADMIN)
     @UseGuards(AuthGuard('jwt'), RolesGuard)
-    @UseInterceptors(
-        FileInterceptor('image', {
-            storage: diskStorage({
-                destination: './uploads',
-                filename: (req, file, callback) => {
-                    const randomName = Array(32).fill(null).map(() => Math.round(Math.random() * 16).toString(16)).join('');
-                    return callback(null, `${randomName}${extname(file.originalname)}`);
-                },
-            }),
-        }),
-    )
-    async create(@Body() post: PostDto, @Request() req, @UploadedFile() image: Express.Multer.File): Promise<PostEntity> {
-        const imagePath = image ? image?.filename : null;
-        return await this.postService.create({ ...post, image: imagePath }, req.user.id);
+    @UseInterceptors(FileInterceptor('image', MulterConfigForPost))
+    async create(@Body() post: PostDto, @Request() req, @UploadedFile() image: Express.Multer.File): Promise<any> {
+        try {
+            const imagePath = image ? image?.filename : null;
+            const cloudinaryResponse = await uploadPostToCloudinary(imagePath);
+            if (image.path) {
+                const filePath = image.path; 
+                fs.unlinkSync(filePath);
+            }
+            const createdPost: PostEntity = await this.postService.create({ ...post, image: cloudinaryResponse.secure_url }, req.user.id);
+            return { post: createdPost, status: true, message: "Post Created Successfully!" }
+        } catch (error) {
+            return { message: error?.message, status: false };
+        }
     }
 
 

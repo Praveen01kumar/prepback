@@ -6,16 +6,16 @@ export class ValidateInputPipe extends ValidationPipe {
    public async transform(value, metadata: ArgumentMetadata) {
       try {
          return await super.transform(value, metadata);
-      } catch (e) {
+      } catch (error) {
 
-         this.handleTransformError(e);
+         this.handleTransformError(error);
 
          // if (e instanceof BadRequestException) {
          //    console.log('this.handleError(e)',this.handleError(e));
          //    throw new UnprocessableEntityException(this.handleError(e));
          // }
 
-         throw e;
+         return { message: error?.message, status: false };
       }
 
    }

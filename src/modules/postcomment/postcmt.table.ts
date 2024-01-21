@@ -1,11 +1,11 @@
 /* eslint-disable prettier/prettier */
-import { Table, Column, Model, DataType, ForeignKey, BelongsTo, PrimaryKey, Default, HasMany } from 'sequelize-typescript';
-import { User } from '../users/user.table';
+import { Table, Column, Model, DataType, PrimaryKey, Default, ForeignKey, BelongsTo } from 'sequelize-typescript';
 import { v4 as uuidv4 } from 'uuid';
-import { Comment } from '../postcomment/postcmt.table';
+import { User } from '../users/user.table';
+import { Post } from '../posts/post.table';
 
 @Table
-export class Post extends Model<Post> {
+export class Comment extends Model<Comment> {
 
     @PrimaryKey
     @Default(() => uuidv4())
@@ -20,25 +20,25 @@ export class Post extends Model<Post> {
         type: DataType.STRING,
         allowNull: false,
     })
-    title: string;
-
-    @Column({
-        type: DataType.TEXT,
-        allowNull: false,
-    })
-    description: string;
-
-    @Column({
-        type: DataType.STRING,
-        allowNull: true,
-    })
-    category: string;
+    content: string;
 
     @Column({
         type: DataType.STRING,
         allowNull: false,
     })
-    image: string;
+    name: string;
+
+    @Column({
+        type: DataType.STRING,
+        allowNull: false,
+    })
+    email: string;
+
+    @Column({
+        type: DataType.STRING,
+        allowNull: false,
+    })
+    profile_pic: string;
 
     @ForeignKey(() => User)
     @Column({
@@ -47,10 +47,17 @@ export class Post extends Model<Post> {
     })
     userId: string;
 
-    @BelongsTo(() => User, { as: 'author' })
+    @BelongsTo(() => User, { as: 'user' })
     user: User;
 
-    @HasMany(() => Comment, { as: 'comments' })  
-    comments: Comment[];
-    
+    @ForeignKey(() => Post)
+    @Column({
+        type: DataType.UUID,
+        allowNull: false,
+    })
+    postId: string;
+
+    @BelongsTo(() => Post, { as: 'post' })
+    post: Post;
+
 }

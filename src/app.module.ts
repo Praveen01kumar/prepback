@@ -16,6 +16,8 @@ import { TokenMiddleware } from './Middlewares/token.middleware';
 import { MailService } from './services/email.service';
 import { MailModule } from './modules/mail/mail.module';
 import { RecordModule } from './modules/recorded/record.module';
+import { PostsCtgModule } from './modules/postcategory/postctg.module';
+import { PostsCmtModule } from './modules/postcomment/postcmt.module';
 
 @Module({
   imports: [
@@ -29,7 +31,9 @@ import { RecordModule } from './modules/recorded/record.module';
     PostsModule,
     UsersModule,
     MailModule,
-    RecordModule
+    RecordModule,
+    PostsCtgModule,
+    PostsCmtModule
   ],
   controllers: [AppController],
   providers: [AppService, MailService],
@@ -53,6 +57,8 @@ export class AppModule {
       { path: 'auth/account-verification', method: RequestMethod.GET },
       { path: 'auth/verify-me', method: RequestMethod.POST },
       { path: 'posts', method: RequestMethod.GET },
+      { path: 'posts/:id', method: RequestMethod.GET },
+      { path: 'postctg', method: RequestMethod.GET },
 
 
     ).forRoutes('*');

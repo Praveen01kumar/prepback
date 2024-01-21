@@ -4,6 +4,8 @@ import { Post } from './post.table';
 import { User } from '../users/user.table';
 import { POST_REPOSITORY } from 'src/constants';
 import { PostDto } from './post.dto';
+import { literal } from 'sequelize';
+import { Comment } from '../postcomment/postcmt.table';
 
 @Injectable()
 export class PostsService {
@@ -15,15 +17,17 @@ export class PostsService {
 
     async findAll(): Promise<Post[]> {
         return await this.postRepository.findAll<Post>({
-        	include: [{ model: User, attributes: { exclude: ['password', 'id', 'role'] } }],
-    	});
+            include: [{ model: User, as: 'author', attributes: [[literal("CONCAT(first_name, ' ', last_name)"), 'name'], 'email', [literal("profile_img"), 'profile']] }],
+        });
     }
 
     async findOne(id): Promise<Post> {
         return await this.postRepository.findOne({
-        	where: { id },
-        	include: [{ model: User, attributes: { exclude: ['password', 'id', 'role'] } }],
-    	});
+            where: { id },
+            include: [
+                { model: User, as: 'author', attributes: [[literal("CONCAT(first_name, ' ', last_name)"), 'name'], 'email', [literal("profile_img"), 'profile']] },
+                { model: Comment, as: 'comments' }],
+        });
     }
 
     async delete(id, userId) {

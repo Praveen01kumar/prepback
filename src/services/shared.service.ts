@@ -4,7 +4,7 @@ import { extname } from 'path';
 import { v2 as cloudinary } from 'cloudinary';
 
 
-export const MulterConfig = {
+export const MulterConfigForProfile = {
   storage: diskStorage({
     destination: './profileImg',
     filename: (req, file, callback) => {
@@ -25,6 +25,23 @@ export const MulterConfig = {
   },
 };
 
+export const MulterConfigForPost = {
+  storage: diskStorage({
+    destination: './uploads',
+    filename: (req, file, callback) => {
+      const randomName = Array(32).fill(null).map(() => Math.round(Math.random() * 16).toString(16)).join('');
+      return callback(null, `${randomName}${extname(file.originalname)}`);
+    },
+  }),
+  limits: { fileSize: 2 * 1024 * 1024 },
+  fileFilter: (req, file, callback) => {
+    if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
+      return callback(new Error('Only JPG, JPEG, and PNG files are allowed.'));
+    }
+    callback(null, true);
+  },
+};
+
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
   api_key: process.env.API_KEY,
@@ -40,6 +57,14 @@ export const CloudinaryConfig = cloudinary.config({
 export const uploadToCloudinary = async (filename: string): Promise<any> => {
   return new Promise((resolve, reject) => {
     cloudinary.uploader.upload(`./profileImg/${filename}`, { folder: 'users' }, (error, result) => {
+      if (error) { reject(error); } else { resolve(result); }
+    });
+  });
+}
+
+export const uploadPostToCloudinary = async (filename: string): Promise<any> => {
+  return new Promise((resolve, reject) => {
+    cloudinary.uploader.upload(`./uploads/${filename}`, { folder: 'posts' }, (error, result) => {
       if (error) { reject(error); } else { resolve(result); }
     });
   });
